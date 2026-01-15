@@ -44,7 +44,7 @@ If you want to build the executable yourself, you need this:
 
 To create a compact, single-file executable:
 ```PowerShell
-python -m nuitka --standalone --onefile --windows-console-mode=disable --enable-plugin=tk-inter --include-windows-runtime-dlls=no --remove-output cdbri.py
+python -m nuitka --standalone --onefile --enable-plugin=tk-inter --windows-console-mode=disable --windows-icon-from-ico=icon.ico --include-data-files=icon.ico=icon.ico cdbri.py
 ```
 
 # ⚠️ Important Notes
@@ -84,7 +84,7 @@ CDbri는 PlayStation의 **비브리본(Vib-Ribbon)**에서 커스텀 곡을 즐�
 
 **빌드 명령어**
 ```PowerShell
-python -m nuitka --standalone --onefile --windows-console-mode=disable --enable-plugin=tk-inter --include-windows-runtime-dlls=no --remove-output cdbri.py
+python -m nuitka --standalone --onefile --enable-plugin=tk-inter --windows-console-mode=disable --windows-icon-from-ico=icon.ico --include-data-files=icon.ico=icon.ico cdbri.py
 ```
 
 # ⚠️ 주의 사항
