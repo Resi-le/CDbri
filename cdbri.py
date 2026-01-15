@@ -7,7 +7,6 @@ import ctypes
 import winreg
 import sys
 
-# Enable High DPI awareness
 try:
     ctypes.windll.shcore.SetProcessDpiAwareness(1)
 except Exception:
@@ -16,7 +15,6 @@ except Exception:
     except Exception:
         pass
 
-# --- Python 3.13+ Compatibility Fix ---
 if sys.version_info >= (3, 13):
     try:
         import audioop
@@ -26,9 +24,7 @@ if sys.version_info >= (3, 13):
             sys.modules["audioop"] = audioop
         except ImportError:
             pass
-# --------------------------------------
 
-# --- Library Check ---
 try:
     from pydub import AudioSegment
 except ImportError as e:
@@ -52,7 +48,6 @@ except ImportError as e:
             "pip install pydub"
          )
     sys.exit(1)
-# ---------------------
 
 class AudioCDCreatorApp:
     def __init__(self, root):
@@ -61,22 +56,16 @@ class AudioCDCreatorApp:
         self.root.geometry("500x720")
         self.root.resizable(False, False)
         
-        # --- [중요] 경로 설정 수정 (Nuitka/PyInstaller 호환성 강화) ---
         if getattr(sys, 'frozen', False):
-            # PyInstaller, cx_Freeze 등 일반적인 빌드 도구
             self.script_dir = os.path.dirname(sys.executable)
         elif "__compiled__" in globals():
-            # Nuitka (sys.frozen이 설정되지 않았을 경우 대비)
-            # Nuitka Onefile에서 sys.argv[0]는 실제 exe 경로를 가리킴
             self.script_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
         else:
-            # 일반 파이썬 스크립트 실행
             try:
                 self.script_dir = os.path.dirname(os.path.abspath(__file__))
             except NameError:
                 self.script_dir = os.getcwd()
                 
-        # 아이콘 경로 설정
         icon_path = os.path.join(self.script_dir, "icon.ico")
         
         if os.path.exists(icon_path):
@@ -84,8 +73,7 @@ class AudioCDCreatorApp:
                 self.root.iconbitmap(icon_path)
             except Exception:
                 pass
-        # -----------------------------------------------
-
+                
         self.file_list = []
         self.style = ttk.Style()
         self.style.theme_use('clam')
@@ -240,7 +228,6 @@ class AudioCDCreatorApp:
         self.folder_entry.insert(0, "New_CD")
         self.folder_entry.grid(row=2, column=1, sticky="ew", padx=(10, 0), pady=(0, 5))
         
-        # 실제 저장될 경로를 미리 계산하여 UI에 표시
         save_path_preview = os.path.join(self.script_dir, "Export")
         self.path_info = ttk.Label(settings_frame, text=f"※ Saves to: {save_path_preview}\\[Folder Name]", font=("Calibri", 8))
         self.path_info.grid(row=3, column=0, columnspan=2, sticky="w", pady=(5, 0))
@@ -431,4 +418,5 @@ class AudioCDCreatorApp:
 if __name__ == "__main__":
     root = tk.Tk()
     app = AudioCDCreatorApp(root)
+
     root.mainloop()
