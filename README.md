@@ -1,4 +1,8 @@
+
+<img width="256" height="256" alt="icon" src="https://github.com/user-attachments/assets/31dada61-1717-413e-954a-7b2675827e43" />
+
 # 💿 CDbri
+
 CDbri is a lightweight utility designed to generate virtual audio CD files required for ```play with my own my choice of CD``` mode in the Vib-Ribbon.
 
 This tool allows you to easily convert your own music files into ```.cue / .bin``` for play custom stages on emulators.
