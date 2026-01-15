@@ -6,7 +6,9 @@ import datetime
 import ctypes
 import winreg
 import sys
+import re
 
+# Enable High DPI awareness
 try:
     ctypes.windll.shcore.SetProcessDpiAwareness(1)
 except Exception:
@@ -15,6 +17,7 @@ except Exception:
     except Exception:
         pass
 
+# Python 3.13+ Compatibility (audioop missing)
 if sys.version_info >= (3, 13):
     try:
         import audioop
@@ -25,6 +28,7 @@ if sys.version_info >= (3, 13):
         except ImportError:
             pass
 
+# Check required libraries
 try:
     from pydub import AudioSegment
 except ImportError as e:
@@ -56,6 +60,7 @@ class AudioCDCreatorApp:
         self.root.geometry("500x720")
         self.root.resizable(False, False)
         
+        # Determine script directory (Handling Nuitka/PyInstaller/Script modes)
         if getattr(sys, 'frozen', False):
             self.script_dir = os.path.dirname(sys.executable)
         elif "__compiled__" in globals():
@@ -73,7 +78,7 @@ class AudioCDCreatorApp:
                 self.root.iconbitmap(icon_path)
             except Exception:
                 pass
-                
+
         self.file_list = []
         self.style = ttk.Style()
         self.style.theme_use('clam')
@@ -295,24 +300,42 @@ class AudioCDCreatorApp:
     def move_up(self):
         selection = self.listbox.curselection()
         if not selection: return
+        
+        new_selection = []
         for i in selection:
-            if i == 0: continue
+            if i == 0: 
+                new_selection.append(i)
+                continue
             text = self.file_list.pop(i)
             self.file_list.insert(i-1, text)
-            self.listbox.selection_clear(i)
-            self.listbox.selection_set(i-1)
+            new_selection.append(i-1)
+            
         self.refresh_list()
+        
+        for i in new_selection:
+            self.listbox.selection_set(i)
+        if new_selection:
+            self.listbox.see(new_selection[0])
         
     def move_down(self):
         selection = self.listbox.curselection()
         if not selection: return
+        
+        new_selection = []
         for i in reversed(selection):
-            if i == len(self.file_list) - 1: continue
+            if i == len(self.file_list) - 1: 
+                new_selection.append(i)
+                continue
             text = self.file_list.pop(i)
             self.file_list.insert(i+1, text)
-            self.listbox.selection_clear(i)
-            self.listbox.selection_set(i+1)
+            new_selection.append(i+1)
+            
         self.refresh_list()
+        
+        for i in new_selection:
+            self.listbox.selection_set(i)
+        if new_selection:
+            self.listbox.see(new_selection[-1])
 
     def refresh_list(self):
         self.listbox.delete(0, tk.END)
@@ -322,6 +345,10 @@ class AudioCDCreatorApp:
 
     def refresh_list_numbers(self):
         self.refresh_list()
+
+    def sanitize_filename(self, name):
+        # Remove characters invalid in Windows filenames
+        return re.sub(r'[\\/*?:"<>|]', "", name)
 
     def start_creation_thread(self):
         if not self.file_list:
@@ -344,10 +371,15 @@ class AudioCDCreatorApp:
             if not os.path.exists(output_dir): os.makedirs(output_dir)
 
             total_files = len(self.file_list)
+            
+            # Sanitize CD title for filename usage
+            file_base_name = self.sanitize_filename(cd_title)
+            bin_filename = f"{file_base_name}.bin"
+            
             cue_content = []
             cue_content.append(f'TITLE "{cd_title}"')
             cue_content.append(f'PERFORMER "{performer}"')
-            cue_content.append(f'FILE "audio_cd_image.bin" BINARY')
+            cue_content.append(f'FILE "{bin_filename}" BINARY')
 
             combined_audio = AudioSegment.empty()
             current_time_ms = 0
@@ -364,7 +396,16 @@ class AudioCDCreatorApp:
                     audio = audio.set_frame_rate(CD_SAMPLE_RATE)
                     audio = audio.set_sample_width(CD_SAMPLE_WIDTH)
                     audio = audio.set_channels(CD_CHANNELS)
+
+                    # Insert 2s silence for CD gap (except for the first track usually, 
+                    # but here we prepend if index>0 to separate tracks properly)
+                    if i > 0:
+                        silence = AudioSegment.silent(duration=2000, frame_rate=CD_SAMPLE_RATE)
+                        silence = silence.set_sample_width(CD_SAMPLE_WIDTH).set_channels(CD_CHANNELS)
+                        combined_audio += silence
+                        current_time_ms += 2000
                     
+                    # Calculate CUE timestamps (75 frames/sec)
                     total_seconds = current_time_ms / 1000.0
                     minutes = int(total_seconds // 60)
                     seconds = int(total_seconds % 60)
@@ -387,8 +428,8 @@ class AudioCDCreatorApp:
                 self.root.after(0, self.update_progress, progress_val)
 
             self.root.after(0, self.update_status, "Saving BIN...")
-            output_bin = os.path.join(output_dir, "audio_cd_image.bin")
-            output_cue = os.path.join(output_dir, "audio_cd_image.cue")
+            output_bin = os.path.join(output_dir, bin_filename)
+            output_cue = os.path.join(output_dir, f"{file_base_name}.cue")
 
             combined_audio.export(output_bin, format="raw")
             self.root.after(0, self.update_progress, 90)
@@ -418,5 +459,4 @@ class AudioCDCreatorApp:
 if __name__ == "__main__":
     root = tk.Tk()
     app = AudioCDCreatorApp(root)
-
     root.mainloop()
