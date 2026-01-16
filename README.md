@@ -55,7 +55,7 @@ python -m nuitka --standalone --onefile --enable-plugin=tk-inter --windows-conso
 Developed by Resi-le, Enjoy your custom level!
 
 # 💿 CDbri
-CDbri는 PlayStation의 **비브리본(Vib-Ribbon)**에서 커스텀 곡을 즐기기 위해 필요한 가상 오디오 CD 파일```.cue / .bin```을 쉽고 빠르게 생성해 주는 도구입니다.
+CDbri는 PlayStation의 **비브리본(Vib-Ribbon)** 에서 커스텀 곡을 즐기기 위해 필요한 가상 오디오 CD 파일```.cue / .bin```을 쉽고 빠르게 생성해 주는 도구입니다.
 
 # ✨ 주요 기능
 
